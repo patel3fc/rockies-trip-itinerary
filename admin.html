@@ -392,30 +392,31 @@ let itinerary = JSON.parse(JSON.stringify(DEFAULT_DATA));
 const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
 const API_URL = 'https://jsonblob.com/api/jsonBlob/019d5f3b-a91d-7db7-ba96-ccf32cfcb2a1';
 
-let saveTimeout;
-function save() {
-  // Debounce saves - push to cloud 500ms after last change
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(async () => {
-    try {
-      const res = await fetch(API_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(itinerary)
-      });
-      if (res.ok) {
-        toast('Saved & pushed live!');
-      } else {
-        toast('Save failed - try again');
-      }
-    } catch (e) {
-      toast('Network error - changes saved locally');
-      localStorage.setItem('admin_itinerary', JSON.stringify(itinerary));
+async function save() {
+  // Always save to localStorage first as backup
+  localStorage.setItem('admin_itinerary', JSON.stringify(itinerary));
+  // Then push to cloud
+  try {
+    const res = await fetch(API_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(itinerary)
+    });
+    if (res.ok) {
+      toast('Saved & pushed live!');
+    } else {
+      toast('Cloud save failed (status ' + res.status + ')');
     }
-  }, 500);
+  } catch (e) {
+    toast('Network error - saved locally only');
+    console.error('Save error:', e);
+  }
 }
 
-function load() { }
+function load() {
+  const d = localStorage.getItem('admin_itinerary');
+  if (d) itinerary = JSON.parse(d);
+}
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -491,20 +492,20 @@ function render() {
 }
 
 // ── CRUD ──
-function addPlace(di) {
+async function addPlace(di) {
   const inp = document.getElementById(`input-${di}`);
   const v = inp.value.trim();
   if (!v) return;
   itinerary[di].places.push(v);
-  save(); render();
-  toast(`Added "${v}"`);
+  render();
+  await save();
 }
 
-function removePlace(di, pi) {
+async function removePlace(di, pi) {
   const name = itinerary[di].places[pi];
   itinerary[di].places.splice(pi, 1);
-  save(); render();
-  toast(`Removed "${name}"`);
+  render();
+  await save();
 }
 
 function editPlace(di, pi) {
@@ -516,41 +517,41 @@ function editPlace(di, pi) {
   el.parentElement.querySelector('.place-name-input')?.focus();
 }
 
-function savePlaceEdit(di, pi, val) {
+async function savePlaceEdit(di, pi, val) {
   const v = val.trim();
   if (v) itinerary[di].places[pi] = v;
-  save(); render();
-  toast('Place updated');
+  render();
+  await save();
 }
 
-function updateDate(di, val) { itinerary[di].date = val; save(); toast('Date updated'); }
-function updateStay(di, val) { itinerary[di].stay = val; save(); renderStats(); toast('Stay updated'); }
+async function updateDate(di, val) { itinerary[di].date = val; await save(); }
+async function updateStay(di, val) { itinerary[di].stay = val; renderStats(); await save(); }
 
-function addDay() {
+async function addDay() {
   const last = itinerary[itinerary.length - 1];
   const parts = last.date.split(' ');
   const dayNum = parseInt(parts[0]) || 1;
   const dateStr = String(dayNum + 1).padStart(2, '0') + ' ' + (parts[1] || 'May');
   itinerary.push({ day: itinerary.length + 1, date: dateStr, stay: 'TBD', places: [] });
-  save(); render();
-  toast('New day added!');
+  render();
+  await save();
 }
 
-function removeDay(di) {
+async function removeDay(di) {
   if (itinerary.length <= 1) { toast('Need at least 1 day!'); return; }
   itinerary.splice(di, 1);
   itinerary.forEach((d, i) => d.day = i + 1);
-  save(); render();
-  toast('Day removed');
+  render();
+  await save();
 }
 
-function moveDay(di, dir) {
+async function moveDay(di, dir) {
   const ni = di + dir;
   if (ni < 0 || ni >= itinerary.length) return;
   [itinerary[di], itinerary[ni]] = [itinerary[ni], itinerary[di]];
   itinerary.forEach((d, i) => d.day = i + 1);
-  save(); render();
-  toast('Day reordered');
+  render();
+  await save();
 }
 
 // ── Drag & Drop ──
@@ -566,7 +567,7 @@ function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 function onDragEnd(e) {
   document.querySelectorAll('.dragging,.drag-over').forEach(el => el.classList.remove('dragging','drag-over'));
 }
-function onDrop(e) {
+async function onDrop(e) {
   e.preventDefault();
   const toDi = +e.currentTarget.dataset.di;
   const toPi = +e.currentTarget.dataset.pi;
@@ -579,8 +580,8 @@ function onDrop(e) {
     const item = itinerary[dragDi].places.splice(dragPi, 1)[0];
     itinerary[toDi].places.splice(toPi, 0, item);
   }
-  save(); render();
-  toast('Reordered!');
+  render();
+  await save();
 }
 
 // ── Export / Import ──
@@ -596,24 +597,24 @@ function importJSON() {
   document.getElementById('importData').value = '';
   document.getElementById('importModal').classList.add('show');
 }
-function doImport() {
+async function doImport() {
   try {
     const data = JSON.parse(document.getElementById('importData').value);
     if (!Array.isArray(data)) throw new Error('Must be array');
     itinerary = data;
     itinerary.forEach((d, i) => d.day = i + 1);
-    save(); render(); closeModal();
-    toast('Data imported successfully!');
+    render(); closeModal();
+    await save();
   } catch (e) { toast('Invalid JSON! Check your data.'); }
 }
 function closeModal() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
 }
-function resetData() {
+async function resetData() {
   if (!confirm('Reset to original itinerary? All changes will be lost.')) return;
   itinerary = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  save(); render();
-  toast('Reset to original!');
+  render();
+  await save();
 }
 
 // Close modals on backdrop click
@@ -621,18 +622,26 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(); });
 });
 
-// Load from cloud on start
+// Load from cloud on start, fallback to localStorage
 async function loadFromCloud() {
   try {
-    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         itinerary = data;
+        localStorage.setItem('admin_itinerary', JSON.stringify(itinerary));
+        render();
+        return;
       }
     }
   } catch (e) {
-    console.log('Using default data');
+    console.log('Cloud fetch failed, trying localStorage');
+  }
+  // Fallback to localStorage
+  const d = localStorage.getItem('admin_itinerary');
+  if (d) {
+    try { itinerary = JSON.parse(d); } catch(e) {}
   }
   render();
 }

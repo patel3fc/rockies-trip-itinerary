@@ -289,7 +289,7 @@ function render() {
 // Load live data from cloud
 async function loadFromCloud() {
   try {
-    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
