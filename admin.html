@@ -165,7 +165,10 @@
   }
   .place-item:nth-child(even) .place-num{background:rgba(0,212,170,.1);color:var(--accent2)}
   .place-icon{font-size:18px;flex-shrink:0}
-  .place-name{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+  .place-name{flex:1;font-size:14px;font-weight:500;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:5px}
+  .place-name:hover{color:var(--accent)}
+  .map-icon{font-size:10px;opacity:0;transition:opacity .2s}
+  .place-item:hover .map-icon{opacity:1}
   .place-name-input{
     flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
     border-radius:8px;padding:6px 10px;color:var(--text);font-size:14px;
@@ -431,7 +434,7 @@ function render() {
           ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
           <div class="place-num">${pi+1}</div>
           <span class="place-icon">${icon}</span>
-          <span class="place-name" id="pname-${di}-${pi}">${p}</span>
+          <a class="place-name" id="pname-${di}-${pi}" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p+' Alberta Canada')}" target="_blank" rel="noopener">${p} <span class="map-icon">&#x1F4CD;</span></a>
           <span class="place-type">${type}</span>
           <button class="btn-icon edit-btn" onclick="editPlace(${di},${pi})" title="Edit">&#9998;</button>
           <button class="btn-icon delete-btn" onclick="removePlace(${di},${pi})" title="Remove">&times;</button>

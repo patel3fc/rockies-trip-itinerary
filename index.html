@@ -139,7 +139,10 @@
     background:rgba(0,212,170,.1);color:var(--accent2);
   }
   .place-icon{font-size:20px;flex-shrink:0}
-  .place-name{flex:1;font-size:15px;font-weight:500;color:var(--text)}
+  .place-name{flex:1;font-size:15px;font-weight:500;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:6px}
+  .place-name:hover{color:var(--accent)}
+  .map-icon{font-size:11px;opacity:0;transition:opacity .2s}
+  .place-item:hover .map-icon{opacity:1}
   .place-type{
     font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);
     padding:3px 10px;border-radius:6px;flex-shrink:0;
@@ -258,11 +261,12 @@ function render() {
     let placesHTML = '';
     day.places.forEach((p, pi) => {
       const {icon, type} = guessType(p);
+      const mapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p + ' Alberta Canada');
       placesHTML += `
         <div class="place-item">
           <div class="place-num">${pi+1}</div>
           <span class="place-icon">${icon}</span>
-          <span class="place-name">${p}</span>
+          <a class="place-name" href="${mapUrl}" target="_blank" rel="noopener">${p} <span class="map-icon">&#x1F4CD;</span></a>
           <span class="place-type">${type}</span>
         </div>`;
     });
