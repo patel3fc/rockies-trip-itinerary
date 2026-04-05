@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canadian Rockies Trip Itinerary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0f1117;--card:#181a24;--card-hover:#1e2130;
+    --accent:#6c63ff;--accent2:#00d4aa;--accent3:#ff6b6b;
+    --text:#e8e8f0;--text-dim:#8b8da3;--text-bright:#fff;
+    --border:#2a2d3e;--shadow:0 8px 32px rgba(0,0,0,.4);
+    --radius:16px;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+    min-height:100vh;overflow-x:hidden;
+  }
+
+  /* Animated background */
+  .bg-glow{
+    position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(ellipse 600px 400px at 20% 20%, rgba(108,99,255,.08), transparent),
+      radial-gradient(ellipse 500px 500px at 80% 80%, rgba(0,212,170,.06), transparent);
+  }
+
+  /* Header */
+  .header{
+    position:relative;z-index:1;text-align:center;
+    padding:48px 24px 32px;
+  }
+  .header-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.25);
+    border-radius:50px;padding:6px 18px;font-size:13px;color:var(--accent);
+    font-weight:500;margin-bottom:20px;letter-spacing:.5px;
+  }
+  .header h1{
+    font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);
+    color:var(--text-bright);line-height:1.2;margin-bottom:8px;
+    background:linear-gradient(135deg,#fff 0%,#c4c0ff 50%,#6c63ff 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .header p{font-size:15px;color:var(--text-dim);max-width:500px;margin:0 auto;}
+
+  /* Trip stats */
+  .stats{
+    display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
+    padding:16px 24px 40px;position:relative;z-index:1;
+  }
+  .stat{text-align:center}
+  .stat-value{font-size:28px;font-weight:700;color:var(--accent)}
+  .stat-label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+  /* Timeline */
+  .timeline{
+    position:relative;z-index:1;max-width:780px;margin:0 auto;
+    padding:0 24px 60px;
+  }
+  .timeline::before{
+    content:'';position:absolute;left:47px;top:0;bottom:60px;
+    width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2),var(--accent3));
+    opacity:.3;border-radius:2px;
+  }
+  @media(max-width:600px){
+    .timeline::before{left:27px}
+  }
+
+  /* Day card */
+  .day-card{
+    position:relative;margin-bottom:36px;
+    padding-left:80px;
+    animation:fadeUp .5s ease both;
+  }
+  @media(max-width:600px){.day-card{padding-left:56px}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+  .day-marker{
+    position:absolute;left:34px;top:24px;
+    width:28px;height:28px;border-radius:50%;
+    background:var(--bg);border:3px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;color:var(--accent);z-index:2;
+    transition:all .3s;
+  }
+  @media(max-width:600px){.day-marker{left:14px;width:26px;height:26px;font-size:10px}}
+  .day-card:nth-child(2) .day-marker{border-color:#8b7aff;color:#8b7aff}
+  .day-card:nth-child(3) .day-marker{border-color:#00d4aa;color:#00d4aa}
+  .day-card:nth-child(4) .day-marker{border-color:#ffa94d;color:#ffa94d}
+  .day-card:nth-child(5) .day-marker{border-color:#ff6b6b;color:#ff6b6b}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow);transition:transform .25s,border-color .25s;
+  }
+  .card:hover{transform:translateY(-2px);border-color:rgba(108,99,255,.3)}
+
+  .card-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 24px 16px;border-bottom:1px solid var(--border);
+    flex-wrap:wrap;gap:8px;
+  }
+  .card-header-left{display:flex;align-items:center;gap:14px}
+  .day-label{
+    font-size:20px;font-weight:700;color:var(--text-bright);
+  }
+  .date-badge{
+    font-size:13px;color:var(--accent);background:rgba(108,99,255,.1);
+    border-radius:8px;padding:4px 12px;font-weight:500;
+  }
+  .card-header .stay-badge{
+    font-size:12px;padding:4px 12px;border-radius:8px;
+    background:rgba(0,212,170,.1);color:var(--accent2);
+    font-weight:500;display:flex;align-items:center;gap:5px;
+  }
+
+  /* Place list */
+  .places{padding:8px 12px 12px;list-style:none}
+  .place-item{
+    display:flex;align-items:center;gap:12px;
+    padding:12px;border-radius:12px;
+    transition:background .2s;position:relative;
+    cursor:default;
+  }
+  .place-item:hover{background:var(--card-hover)}
+  .place-num{
+    flex-shrink:0;width:30px;height:30px;border-radius:10px;
+    background:rgba(108,99,255,.1);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;
+  }
+  .place-item:nth-child(even) .place-num{
+    background:rgba(0,212,170,.1);color:var(--accent2);
+  }
+  .place-icon{font-size:20px;flex-shrink:0}
+  .place-name{flex:1;font-size:15px;font-weight:500;color:var(--text)}
+  .place-type{
+    font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);
+    padding:3px 10px;border-radius:6px;flex-shrink:0;
+  }
+  .btn-remove{
+    flex-shrink:0;width:32px;height:32px;border-radius:8px;
+    border:none;background:transparent;color:var(--text-dim);
+    cursor:pointer;font-size:16px;display:flex;align-items:center;
+    justify-content:center;transition:all .2s;opacity:0;
+  }
+  .place-item:hover .btn-remove{opacity:1}
+  .btn-remove:hover{background:rgba(255,107,107,.15);color:var(--accent3)}
+
+  /* Add place */
+  .add-place-row{
+    display:flex;gap:8px;padding:8px 12px 16px;
+  }
+  .add-place-row input{
+    flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+    border-radius:10px;padding:10px 14px;color:var(--text);
+    font-size:14px;font-family:inherit;outline:none;
+    transition:border-color .2s;
+  }
+  .add-place-row input::placeholder{color:var(--text-dim)}
+  .add-place-row input:focus{border-color:var(--accent)}
+  .btn-add{
+    flex-shrink:0;background:var(--accent);color:#fff;border:none;
+    border-radius:10px;padding:0 18px;font-size:20px;cursor:pointer;
+    font-weight:300;transition:all .2s;display:flex;align-items:center;
+  }
+  .btn-add:hover{background:#5a52e0;transform:scale(1.05)}
+
+  /* Add day button */
+  .add-day-wrap{text-align:center;margin-top:8px;position:relative;z-index:1}
+  .btn-add-day{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(108,99,255,.1);border:1px dashed rgba(108,99,255,.3);
+    border-radius:14px;padding:14px 28px;color:var(--accent);
+    font-size:15px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:all .25s;
+  }
+  .btn-add-day:hover{background:rgba(108,99,255,.18);border-color:var(--accent);transform:scale(1.03)}
+
+  /* Remove day button */
+  .btn-remove-day{
+    background:none;border:1px solid rgba(255,107,107,.25);
+    color:var(--accent3);border-radius:8px;padding:5px 14px;
+    font-size:12px;cursor:pointer;font-family:inherit;
+    transition:all .2s;font-weight:500;
+  }
+  .btn-remove-day:hover{background:rgba(255,107,107,.12);border-color:var(--accent3)}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px 24px;color:var(--text);
+    font-size:14px;box-shadow:var(--shadow);z-index:100;
+    opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);
+    pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Drag */
+  .place-item.dragging{opacity:.4}
+  .place-item.drag-over{border-top:2px solid var(--accent)}
+
+  /* Responsive */
+  @media(max-width:600px){
+    .header{padding:32px 16px 20px}
+    .stats{gap:20px;padding:12px 16px 28px}
+    .timeline{padding:0 12px 40px}
+    .card-header{padding:16px 16px 12px}
+    .places{padding:4px 8px 8px}
+    .add-place-row{padding:4px 8px 12px}
+    .place-type{display:none}
+    .btn-remove{opacity:1}
+  }
+
+  /* Print */
+  @media print{
+    .bg-glow,.btn-remove,.btn-add,.add-place-row,.btn-add-day,.btn-remove-day{display:none!important}
+    body{background:#fff;color:#222}
+    .card{border:1px solid #ddd;box-shadow:none}
+    .header h1{-webkit-text-fill-color:#222;color:#222}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<header class="header">
+  <div class="header-badge">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    MAY 2026
+  </div>
+  <h1>Canadian Rockies Adventure</h1>
+  <p>Banff &middot; Lake Louise &middot; Jasper &middot; Golden</p>
+</header>
+
+<div class="stats" id="stats"></div>
+<div class="timeline" id="timeline"></div>
+<div class="add-day-wrap">
+  <button class="btn-add-day" onclick="addDay()">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    Add Day
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ICONS = {
+  lake:'&#x1F3DE;', hike:'&#x1F97E;', canyon:'&#x1F3D4;', mountain:'&#x26F0;',
+  falls:'&#x1F4A7;', bridge:'&#x1F309;', hotspring:'&#x2668;', glacier:'&#x1FA73;',
+  drive:'&#x1F697;', stay:'&#x1F3E8;', default:'&#x1F4CD;'
+};
+
+function guessType(name) {
+  const n = name.toLowerCase();
+  if (/lake|bow lake|peyto|moraine|minnewanka|abraham|emerald|maligne|louise|two.?jack/i.test(n)) return {icon:ICONS.lake, type:'Lake'};
+  if (/hike|beehive/i.test(n)) return {icon:ICONS.hike, type:'Hike'};
+  if (/canyon/i.test(n)) return {icon:ICONS.canyon, type:'Canyon'};
+  if (/mountain|sulph/i.test(n)) return {icon:ICONS.mountain, type:'Mountain'};
+  if (/falls|sunwapta|athabasca/i.test(n)) return {icon:ICONS.falls, type:'Waterfall'};
+  if (/bridge|skybridge/i.test(n)) return {icon:ICONS.bridge, type:'Attraction'};
+  if (/hot\s?spring/i.test(n)) return {icon:ICONS.hotspring, type:'Hot Spring'};
+  if (/icefield|glacier|columbia/i.test(n)) return {icon:ICONS.glacier, type:'Glacier'};
+  if (/canmore|hinton|calgary|stay|from|to\s/i.test(n)) return {icon:ICONS.stay, type:'Transit'};
+  return {icon:ICONS.default, type:'Spot'};
+}
+
+let itinerary = [
+  { day:1, date:'02 May', stay:'Canmore', places:['Two-Jack Lake','Lake Minnewanka','Johnston Canyon','Sulphur Mountain','To Canmore Stay'] },
+  { day:2, date:'03 May', stay:'Canmore', places:['Big Beehive Hike (Lake Louise)','Lake Louise','Moraine Lake','To Canmore Stay'] },
+  { day:3, date:'04 May', stay:'Hinton', places:['From Canmore Stay','Golden Skybridge','Bow Lake','Peyto Lake','Sunwapta Falls','Go to Hinton Stay'] },
+  { day:4, date:'05 May', stay:'Hinton', places:['Athabasca Falls','Columbia Icefield Parkway','Abraham Lake','Back to Hinton Stay'] },
+  { day:5, date:'06 May', stay:'Calgary', places:['From Hinton Stay','Maligne Lake','Emerald Lake','Banff Upper Hot Springs','To Calgary'] },
+];
+
+const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
+
+function save() { localStorage.setItem('rockies_trip', JSON.stringify(itinerary)); }
+function load() {
+  const d = localStorage.getItem('rockies_trip');
+  if (d) itinerary = JSON.parse(d);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function renderStats() {
+  const totalPlaces = itinerary.reduce((s,d) => s + d.places.length, 0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-value">${itinerary.length}</div><div class="stat-label">Days</div></div>
+    <div class="stat"><div class="stat-value">${totalPlaces}</div><div class="stat-label">Stops</div></div>
+    <div class="stat"><div class="stat-value">${new Set(itinerary.map(d=>d.stay)).size}</div><div class="stat-label">Stays</div></div>
+  `;
+}
+
+function render() {
+  renderStats();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  itinerary.forEach((day, di) => {
+    const color = COLORS[di % COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.style.animationDelay = `${di * .08}s`;
+
+    let placesHTML = '';
+    day.places.forEach((p, pi) => {
+      const {icon, type} = guessType(p);
+      placesHTML += `
+        <div class="place-item" draggable="true" data-di="${di}" data-pi="${pi}"
+          ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+          <div class="place-num">${pi+1}</div>
+          <span class="place-icon">${icon}</span>
+          <span class="place-name">${p}</span>
+          <span class="place-type">${type}</span>
+          <button class="btn-remove" onclick="removePlace(${di},${pi})" title="Remove">&times;</button>
+        </div>`;
+    });
+
+    card.innerHTML = `
+      <div class="day-marker" style="border-color:${color};color:${color}">${day.day}</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="day-label">Day ${day.day}</span>
+            <span class="date-badge" style="color:${color};background:${color}18">${day.date}</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="stay-badge">&#x1F3E8; ${day.stay}</span>
+            ${itinerary.length > 1 ? `<button class="btn-remove-day" onclick="removeDay(${di})">Remove Day</button>` : ''}
+          </div>
+        </div>
+        <div class="places">${placesHTML}</div>
+        <div class="add-place-row">
+          <input type="text" placeholder="Add a place..." id="input-${di}"
+            onkeydown="if(event.key==='Enter')addPlace(${di})">
+          <button class="btn-add" onclick="addPlace(${di})">+</button>
+        </div>
+      </div>`;
+    tl.appendChild(card);
+  });
+}
+
+function addPlace(di) {
+  const inp = document.getElementById(`input-${di}`);
+  const v = inp.value.trim();
+  if (!v) return;
+  itinerary[di].places.push(v);
+  save(); render();
+  toast(`Added "${v}" to Day ${itinerary[di].day}`);
+}
+
+function removePlace(di, pi) {
+  const name = itinerary[di].places[pi];
+  itinerary[di].places.splice(pi, 1);
+  save(); render();
+  toast(`Removed "${name}"`);
+}
+
+function addDay() {
+  const last = itinerary[itinerary.length - 1];
+  const lastDate = new Date(2026, 4, parseInt(last.date));
+  const nextDate = new Date(lastDate); nextDate.setDate(nextDate.getDate() + 1);
+  const dateStr = String(nextDate.getDate()).padStart(2,'0') + ' May';
+  itinerary.push({ day: last.day + 1, date: dateStr, stay: 'TBD', places: [] });
+  save(); render();
+  toast('New day added!');
+}
+
+function removeDay(di) {
+  const d = itinerary[di];
+  itinerary.splice(di, 1);
+  itinerary.forEach((d, i) => d.day = i + 1);
+  save(); render();
+  toast(`Day removed`);
+}
+
+/* Drag & drop reorder */
+let dragDi, dragPi;
+function onDragStart(e) {
+  dragDi = +e.currentTarget.dataset.di;
+  dragPi = +e.currentTarget.dataset.pi;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('drag-over');
+}
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDragEnd(e) {
+  document.querySelectorAll('.dragging,.drag-over').forEach(el => el.classList.remove('dragging','drag-over'));
+}
+function onDrop(e) {
+  e.preventDefault();
+  const toDi = +e.currentTarget.dataset.di;
+  const toPi = +e.currentTarget.dataset.pi;
+  e.currentTarget.classList.remove('drag-over');
+  if (dragDi === toDi) {
+    const arr = itinerary[dragDi].places;
+    const [item] = arr.splice(dragPi, 1);
+    arr.splice(toPi, 0, item);
+  } else {
+    const item = itinerary[dragDi].places.splice(dragPi, 1)[0];
+    itinerary[toDi].places.splice(toPi, 0, item);
+  }
+  save(); render();
+  toast('Reordered!');
+}
+
+load();
+render();
+</script>
+</body>
+</html>
