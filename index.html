@@ -144,15 +144,6 @@
     font-size:11px;color:var(--text-dim);background:rgba(255,255,255,.05);
     padding:3px 10px;border-radius:6px;flex-shrink:0;
   }
-  .btn-remove{
-    flex-shrink:0;width:32px;height:32px;border-radius:8px;
-    border:none;background:transparent;color:var(--text-dim);
-    cursor:pointer;font-size:16px;display:flex;align-items:center;
-    justify-content:center;transition:all .2s;opacity:0;
-  }
-  .place-item:hover .btn-remove{opacity:1}
-  .btn-remove:hover{background:rgba(255,107,107,.15);color:var(--accent3)}
-
   .places-footer{padding:4px}
 
   /* Toast */
@@ -166,10 +157,6 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* Drag */
-  .place-item.dragging{opacity:.4}
-  .place-item.drag-over{border-top:2px solid var(--accent)}
-
   /* Responsive */
   @media(max-width:600px){
     .header{padding:32px 16px 20px}
@@ -177,14 +164,12 @@
     .timeline{padding:0 12px 40px}
     .card-header{padding:16px 16px 12px}
     .places{padding:4px 8px 8px}
-    .add-place-row{padding:4px 8px 12px}
     .place-type{display:none}
-    .btn-remove{opacity:1}
   }
 
   /* Print */
   @media print{
-    .bg-glow,.btn-remove{display:none!important}
+    .bg-glow{display:none!important}
     body{background:#fff;color:#222}
     .card{border:1px solid #ddd;box-shadow:none}
     .header h1{-webkit-text-fill-color:#222;color:#222}
@@ -240,11 +225,8 @@ let itinerary = [
 
 const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
 
-function save() { localStorage.setItem('rockies_trip', JSON.stringify(itinerary)); }
-function load() {
-  const d = localStorage.getItem('rockies_trip');
-  if (d) itinerary = JSON.parse(d);
-}
+function save() { }
+function load() { }
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -277,14 +259,11 @@ function render() {
     day.places.forEach((p, pi) => {
       const {icon, type} = guessType(p);
       placesHTML += `
-        <div class="place-item" draggable="true" data-di="${di}" data-pi="${pi}"
-          ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
-          ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+        <div class="place-item">
           <div class="place-num">${pi+1}</div>
           <span class="place-icon">${icon}</span>
           <span class="place-name">${p}</span>
           <span class="place-type">${type}</span>
-          <button class="btn-remove" onclick="removePlace(${di},${pi})" title="Remove">&times;</button>
         </div>`;
     });
 
@@ -305,45 +284,6 @@ function render() {
   });
 }
 
-function removePlace(di, pi) {
-  const name = itinerary[di].places[pi];
-  itinerary[di].places.splice(pi, 1);
-  save(); render();
-  toast(`Removed "${name}"`);
-}
-
-/* Drag & drop reorder */
-let dragDi, dragPi;
-function onDragStart(e) {
-  dragDi = +e.currentTarget.dataset.di;
-  dragPi = +e.currentTarget.dataset.pi;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-function onDragOver(e) {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-}
-function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-function onDragEnd(e) {
-  document.querySelectorAll('.dragging,.drag-over').forEach(el => el.classList.remove('dragging','drag-over'));
-}
-function onDrop(e) {
-  e.preventDefault();
-  const toDi = +e.currentTarget.dataset.di;
-  const toPi = +e.currentTarget.dataset.pi;
-  e.currentTarget.classList.remove('drag-over');
-  if (dragDi === toDi) {
-    const arr = itinerary[dragDi].places;
-    const [item] = arr.splice(dragPi, 1);
-    arr.splice(toPi, 0, item);
-  } else {
-    const item = itinerary[dragDi].places.splice(dragPi, 1)[0];
-    itinerary[toDi].places.splice(toPi, 0, item);
-  }
-  save(); render();
-  toast('Reordered!');
-}
 
 load();
 render();
