@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Canadian Rockies Itinerary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0f1117;--card:#181a24;--card-hover:#1e2130;
+    --accent:#6c63ff;--accent2:#00d4aa;--accent3:#ff6b6b;
+    --text:#e8e8f0;--text-dim:#8b8da3;--text-bright:#fff;
+    --border:#2a2d3e;--shadow:0 8px 32px rgba(0,0,0,.4);
+    --radius:16px;--accent-orange:#ffa94d;
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+  .bg-glow{
+    position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(ellipse 600px 400px at 20% 20%, rgba(108,99,255,.08), transparent),
+      radial-gradient(ellipse 500px 500px at 80% 80%, rgba(255,107,107,.06), transparent);
+  }
+
+  /* Login overlay */
+  .login-overlay{
+    position:fixed;inset:0;z-index:1000;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .4s,visibility .4s;
+  }
+  .login-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+  .login-box{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:48px 40px;text-align:center;max-width:400px;width:90%;box-shadow:var(--shadow);
+  }
+  .login-box h2{font-family:'Playfair Display',serif;font-size:24px;color:var(--text-bright);margin-bottom:8px}
+  .login-box p{font-size:13px;color:var(--text-dim);margin-bottom:28px}
+  .login-box input{
+    width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);
+    border-radius:10px;padding:12px 16px;color:var(--text);font-size:15px;
+    font-family:inherit;outline:none;text-align:center;letter-spacing:4px;
+    transition:border-color .2s;margin-bottom:16px;
+  }
+  .login-box input:focus{border-color:var(--accent)}
+  .login-box .btn-login{
+    width:100%;padding:12px;background:var(--accent);color:#fff;border:none;
+    border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:all .2s;
+  }
+  .login-box .btn-login:hover{background:#5a52e0}
+  .login-error{color:var(--accent3);font-size:13px;margin-top:12px;display:none}
+
+  /* Header */
+  .header{position:relative;z-index:1;text-align:center;padding:36px 24px 24px}
+  .admin-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);
+    border-radius:50px;padding:6px 18px;font-size:12px;color:var(--accent3);
+    font-weight:600;margin-bottom:16px;letter-spacing:1px;text-transform:uppercase;
+  }
+  .header h1{
+    font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.4rem);
+    color:var(--text-bright);line-height:1.2;margin-bottom:6px;
+    background:linear-gradient(135deg,#ff6b6b 0%,#ffa94d 50%,#6c63ff 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .header p{font-size:14px;color:var(--text-dim)}
+
+  /* Toolbar */
+  .toolbar{
+    position:relative;z-index:1;max-width:820px;margin:0 auto;
+    padding:0 24px 20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  }
+  .toolbar .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:all .2s;border:1px solid;
+  }
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)!important}
+  .btn-primary:hover{background:#5a52e0}
+  .btn-success{background:rgba(0,212,170,.12);color:var(--accent2);border-color:rgba(0,212,170,.3)!important}
+  .btn-success:hover{background:rgba(0,212,170,.2)}
+  .btn-danger{background:rgba(255,107,107,.1);color:var(--accent3);border-color:rgba(255,107,107,.25)!important}
+  .btn-danger:hover{background:rgba(255,107,107,.18)}
+  .btn-outline{background:transparent;color:var(--text-dim);border-color:var(--border)!important}
+  .btn-outline:hover{background:var(--card-hover);color:var(--text)}
+
+  /* Stats */
+  .stats{
+    display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
+    padding:8px 24px 32px;position:relative;z-index:1;
+  }
+  .stat{text-align:center}
+  .stat-value{font-size:26px;font-weight:700;color:var(--accent)}
+  .stat-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+  /* Timeline */
+  .timeline{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:0 24px 40px}
+  .timeline::before{
+    content:'';position:absolute;left:47px;top:0;bottom:40px;
+    width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2),var(--accent3));opacity:.3;border-radius:2px;
+  }
+  @media(max-width:600px){.timeline::before{left:27px}}
+
+  /* Day card */
+  .day-card{position:relative;margin-bottom:32px;padding-left:80px;animation:fadeUp .4s ease both}
+  @media(max-width:600px){.day-card{padding-left:56px}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  .day-marker{
+    position:absolute;left:34px;top:20px;width:28px;height:28px;border-radius:50%;
+    background:var(--bg);border:3px solid var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;color:var(--accent);z-index:2;
+  }
+  @media(max-width:600px){.day-marker{left:14px;width:26px;height:26px;font-size:10px}}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow);transition:border-color .25s;
+  }
+  .card:hover{border-color:rgba(108,99,255,.25)}
+
+  /* Card header - editable */
+  .card-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 20px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;
+  }
+  .card-header-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .day-label{font-size:18px;font-weight:700;color:var(--text-bright)}
+  .editable-input{
+    background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;
+    padding:4px 10px;color:var(--text);font-size:13px;font-family:inherit;outline:none;
+    transition:border-color .2s;width:90px;
+  }
+  .editable-input:focus{border-color:var(--accent)}
+  .editable-input.stay-input{width:110px}
+  .stay-badge{
+    font-size:12px;padding:4px 10px;border-radius:8px;
+    background:rgba(0,212,170,.1);color:var(--accent2);
+    font-weight:500;display:flex;align-items:center;gap:5px;
+  }
+  .card-actions{display:flex;gap:6px;align-items:center}
+  .btn-sm{
+    padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:all .2s;border:1px solid;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+
+  /* Place list */
+  .places{padding:6px 10px 4px;list-style:none}
+  .place-item{
+    display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;
+    transition:background .2s;cursor:grab;
+  }
+  .place-item:hover{background:var(--card-hover)}
+  .place-item.dragging{opacity:.3}
+  .place-item.drag-over{border-top:2px solid var(--accent)}
+  .place-num{
+    flex-shrink:0;width:28px;height:28px;border-radius:8px;
+    background:rgba(108,99,255,.1);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;
+  }
+  .place-item:nth-child(even) .place-num{background:rgba(0,212,170,.1);color:var(--accent2)}
+  .place-icon{font-size:18px;flex-shrink:0}
+  .place-name{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+  .place-name-input{
+    flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+    border-radius:8px;padding:6px 10px;color:var(--text);font-size:14px;
+    font-family:inherit;outline:none;transition:border-color .2s;
+  }
+  .place-name-input:focus{border-color:var(--accent)}
+  .place-type{
+    font-size:10px;color:var(--text-dim);background:rgba(255,255,255,.05);
+    padding:2px 8px;border-radius:5px;flex-shrink:0;
+  }
+  .btn-icon{
+    flex-shrink:0;width:30px;height:30px;border-radius:8px;border:none;
+    background:transparent;color:var(--text-dim);cursor:pointer;font-size:14px;
+    display:flex;align-items:center;justify-content:center;transition:all .2s;
+  }
+  .btn-icon:hover{background:rgba(255,255,255,.08);color:var(--text)}
+  .btn-icon.edit-btn:hover{color:var(--accent)}
+  .btn-icon.delete-btn:hover{background:rgba(255,107,107,.12);color:var(--accent3)}
+
+  /* Add place row */
+  .add-place-row{display:flex;gap:8px;padding:8px 10px 14px}
+  .add-place-row input{
+    flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+    border-radius:10px;padding:9px 14px;color:var(--text);font-size:13px;
+    font-family:inherit;outline:none;transition:border-color .2s;
+  }
+  .add-place-row input::placeholder{color:var(--text-dim)}
+  .add-place-row input:focus{border-color:var(--accent)}
+  .btn-add{
+    flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:10px;
+    padding:0 16px;font-size:18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;
+  }
+  .btn-add:hover{background:#5a52e0;transform:scale(1.05)}
+
+  /* Add day */
+  .add-day-wrap{text-align:center;margin-top:4px;position:relative;z-index:1;padding-bottom:40px}
+  .btn-add-day{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(108,99,255,.1);border:1px dashed rgba(108,99,255,.3);
+    border-radius:14px;padding:14px 28px;color:var(--accent);font-size:14px;font-weight:600;
+    cursor:pointer;font-family:inherit;transition:all .25s;
+  }
+  .btn-add-day:hover{background:rgba(108,99,255,.18);border-color:var(--accent);transform:scale(1.03)}
+
+  /* Toast */
+  .toast{
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:12px 24px;color:var(--text);font-size:14px;box-shadow:var(--shadow);
+    z-index:100;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* Export modal */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.6);
+    display:none;align-items:center;justify-content:center;padding:24px;
+  }
+  .modal-overlay.show{display:flex}
+  .modal{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:32px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);
+  }
+  .modal h3{font-size:18px;color:var(--text-bright);margin-bottom:6px}
+  .modal p{font-size:13px;color:var(--text-dim);margin-bottom:16px}
+  .modal textarea{
+    width:100%;min-height:200px;background:rgba(255,255,255,.04);border:1px solid var(--border);
+    border-radius:10px;padding:14px;color:var(--accent2);font-size:12px;
+    font-family:'Courier New',monospace;outline:none;resize:vertical;
+  }
+  .modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+
+  /* Responsive */
+  @media(max-width:600px){
+    .header{padding:24px 16px 16px}
+    .toolbar{padding:0 16px 16px}
+    .stats{gap:20px;padding:4px 16px 24px}
+    .timeline{padding:0 12px 30px}
+    .card-header{padding:12px 14px 10px}
+    .places{padding:4px 8px 4px}
+    .add-place-row{padding:4px 8px 10px}
+    .place-type{display:none}
+    .editable-input{width:80px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>Admin Access</h2>
+    <p>Enter passcode to manage your itinerary</p>
+    <input type="password" id="passcodeInput" placeholder="****" maxlength="10"
+      onkeydown="if(event.key==='Enter')attemptLogin()">
+    <button class="btn-login" onclick="attemptLogin()">Unlock</button>
+    <div class="login-error" id="loginError">Incorrect passcode. Try again.</div>
+  </div>
+</div>
+
+<div class="bg-glow"></div>
+
+<header class="header">
+  <div class="admin-badge">
+    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+    ADMIN PANEL
+  </div>
+  <h1>Itinerary Manager</h1>
+  <p>Add, edit, remove places & days</p>
+</header>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <button class="btn btn-success" onclick="exportJSON()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    Export Data
+  </button>
+  <button class="btn btn-outline" onclick="importJSON()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+    Import Data
+  </button>
+  <button class="btn btn-danger" onclick="resetData()">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Reset
+  </button>
+  <a class="btn btn-outline" href="index.html" target="_blank" style="text-decoration:none">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+    View Live
+  </a>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="timeline" id="timeline"></div>
+
+<div class="add-day-wrap">
+  <button class="btn-add-day" onclick="addDay()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    Add New Day
+  </button>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <h3>Export Itinerary Data</h3>
+    <p>Copy this JSON and use it to update your index.html or share with others.</p>
+    <textarea id="exportData" readonly></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" onclick="copyExport()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <h3>Import Itinerary Data</h3>
+    <p>Paste JSON data below to replace the current itinerary.</p>
+    <textarea id="importData" placeholder='[{"day":1,"date":"02 May","stay":"Canmore","places":["Place 1","Place 2"]}]'></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="doImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Passcode ──
+const PASSCODE = 'rockies2026';
+
+function attemptLogin() {
+  const inp = document.getElementById('passcodeInput');
+  if (inp.value === PASSCODE) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    localStorage.setItem('admin_auth','1');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+    inp.value = '';
+    inp.focus();
+  }
+}
+// Auto-login if previously authenticated in this session
+if (localStorage.getItem('admin_auth') === '1') {
+  document.getElementById('loginOverlay').classList.add('hidden');
+}
+
+// ── Icons ──
+const ICONS = {
+  lake:'&#x1F3DE;',hike:'&#x1F97E;',canyon:'&#x1F3D4;',mountain:'&#x26F0;',
+  falls:'&#x1F4A7;',bridge:'&#x1F309;',hotspring:'&#x2668;',glacier:'&#x1FA73;',
+  drive:'&#x1F697;',stay:'&#x1F3E8;',default:'&#x1F4CD;'
+};
+
+function guessType(name) {
+  const n = name.toLowerCase();
+  if (/lake|bow lake|peyto|moraine|minnewanka|abraham|emerald|maligne|louise|two.?jack/i.test(n)) return {icon:ICONS.lake,type:'Lake'};
+  if (/hike|beehive/i.test(n)) return {icon:ICONS.hike,type:'Hike'};
+  if (/canyon/i.test(n)) return {icon:ICONS.canyon,type:'Canyon'};
+  if (/mountain|sulph/i.test(n)) return {icon:ICONS.mountain,type:'Mountain'};
+  if (/falls|sunwapta|athabasca/i.test(n)) return {icon:ICONS.falls,type:'Waterfall'};
+  if (/bridge|skybridge/i.test(n)) return {icon:ICONS.bridge,type:'Attraction'};
+  if (/hot\s?spring/i.test(n)) return {icon:ICONS.hotspring,type:'Hot Spring'};
+  if (/icefield|glacier|columbia/i.test(n)) return {icon:ICONS.glacier,type:'Glacier'};
+  if (/canmore|hinton|calgary|stay|from|to\s/i.test(n)) return {icon:ICONS.stay,type:'Transit'};
+  return {icon:ICONS.default,type:'Spot'};
+}
+
+// ── Default Data ──
+const DEFAULT_DATA = [
+  {day:1,date:'02 May',stay:'Canmore',places:['Two-Jack Lake','Lake Minnewanka','Johnston Canyon','Sulphur Mountain','To Canmore Stay']},
+  {day:2,date:'03 May',stay:'Canmore',places:['Big Beehive Hike (Lake Louise)','Lake Louise','Moraine Lake','Golden Skybridge','To Canmore Stay']},
+  {day:3,date:'04 May',stay:'Hinton',places:['From Canmore Stay','Bow Lake','Peyto Lake','Sunwapta Falls','Go to Hinton Stay']},
+  {day:4,date:'05 May',stay:'Hinton',places:['Athabasca Falls','Columbia Icefield Parkway','Abraham Lake','Back to Hinton Stay']},
+  {day:5,date:'06 May',stay:'Calgary',places:['From Hinton Stay','Maligne Lake','Emerald Lake','Banff Upper Hot Springs','To Calgary']},
+];
+
+let itinerary = JSON.parse(JSON.stringify(DEFAULT_DATA));
+const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
+
+function save() { localStorage.setItem('admin_itinerary', JSON.stringify(itinerary)); }
+function load() {
+  const d = localStorage.getItem('admin_itinerary');
+  if (d) itinerary = JSON.parse(d);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function renderStats() {
+  const totalPlaces = itinerary.reduce((s,d) => s + d.places.length, 0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-value">${itinerary.length}</div><div class="stat-label">Days</div></div>
+    <div class="stat"><div class="stat-value">${totalPlaces}</div><div class="stat-label">Stops</div></div>
+    <div class="stat"><div class="stat-value">${new Set(itinerary.map(d=>d.stay)).size}</div><div class="stat-label">Stays</div></div>
+  `;
+}
+
+// ── Render ──
+function render() {
+  renderStats();
+  const tl = document.getElementById('timeline');
+  tl.innerHTML = '';
+  itinerary.forEach((day, di) => {
+    const color = COLORS[di % COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    card.style.animationDelay = `${di * .06}s`;
+
+    let placesHTML = '';
+    day.places.forEach((p, pi) => {
+      const {icon, type} = guessType(p);
+      placesHTML += `
+        <div class="place-item" draggable="true" data-di="${di}" data-pi="${pi}"
+          ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+          <div class="place-num">${pi+1}</div>
+          <span class="place-icon">${icon}</span>
+          <span class="place-name" id="pname-${di}-${pi}">${p}</span>
+          <span class="place-type">${type}</span>
+          <button class="btn-icon edit-btn" onclick="editPlace(${di},${pi})" title="Edit">&#9998;</button>
+          <button class="btn-icon delete-btn" onclick="removePlace(${di},${pi})" title="Remove">&times;</button>
+        </div>`;
+    });
+
+    card.innerHTML = `
+      <div class="day-marker" style="border-color:${color};color:${color}">${day.day}</div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="day-label">Day ${day.day}</span>
+            <input class="editable-input" value="${day.date}" onchange="updateDate(${di},this.value)" title="Edit date">
+            <div class="stay-badge">
+              &#x1F3E8;
+              <input class="editable-input stay-input" value="${day.stay}" onchange="updateStay(${di},this.value)" title="Edit stay">
+            </div>
+          </div>
+          <div class="card-actions">
+            ${di > 0 ? `<button class="btn-sm btn-outline" onclick="moveDay(${di},-1)" title="Move up">&#x25B2;</button>` : ''}
+            ${di < itinerary.length-1 ? `<button class="btn-sm btn-outline" onclick="moveDay(${di},1)" title="Move down">&#x25BC;</button>` : ''}
+            <button class="btn-sm btn-danger" onclick="removeDay(${di})">Remove Day</button>
+          </div>
+        </div>
+        <div class="places">${placesHTML}</div>
+        <div class="add-place-row">
+          <input type="text" placeholder="Add a new place..." id="input-${di}"
+            onkeydown="if(event.key==='Enter')addPlace(${di})">
+          <button class="btn-add" onclick="addPlace(${di})">+</button>
+        </div>
+      </div>`;
+    tl.appendChild(card);
+  });
+}
+
+// ── CRUD ──
+function addPlace(di) {
+  const inp = document.getElementById(`input-${di}`);
+  const v = inp.value.trim();
+  if (!v) return;
+  itinerary[di].places.push(v);
+  save(); render();
+  toast(`Added "${v}"`);
+}
+
+function removePlace(di, pi) {
+  const name = itinerary[di].places[pi];
+  itinerary[di].places.splice(pi, 1);
+  save(); render();
+  toast(`Removed "${name}"`);
+}
+
+function editPlace(di, pi) {
+  const el = document.getElementById(`pname-${di}-${pi}`);
+  const current = itinerary[di].places[pi];
+  el.outerHTML = `<input class="place-name-input" value="${current}"
+    onblur="savePlaceEdit(${di},${pi},this.value)"
+    onkeydown="if(event.key==='Enter')this.blur()" autofocus>`;
+  el.parentElement.querySelector('.place-name-input')?.focus();
+}
+
+function savePlaceEdit(di, pi, val) {
+  const v = val.trim();
+  if (v) itinerary[di].places[pi] = v;
+  save(); render();
+  toast('Place updated');
+}
+
+function updateDate(di, val) { itinerary[di].date = val; save(); toast('Date updated'); }
+function updateStay(di, val) { itinerary[di].stay = val; save(); renderStats(); toast('Stay updated'); }
+
+function addDay() {
+  const last = itinerary[itinerary.length - 1];
+  const parts = last.date.split(' ');
+  const dayNum = parseInt(parts[0]) || 1;
+  const dateStr = String(dayNum + 1).padStart(2, '0') + ' ' + (parts[1] || 'May');
+  itinerary.push({ day: itinerary.length + 1, date: dateStr, stay: 'TBD', places: [] });
+  save(); render();
+  toast('New day added!');
+}
+
+function removeDay(di) {
+  if (itinerary.length <= 1) { toast('Need at least 1 day!'); return; }
+  itinerary.splice(di, 1);
+  itinerary.forEach((d, i) => d.day = i + 1);
+  save(); render();
+  toast('Day removed');
+}
+
+function moveDay(di, dir) {
+  const ni = di + dir;
+  if (ni < 0 || ni >= itinerary.length) return;
+  [itinerary[di], itinerary[ni]] = [itinerary[ni], itinerary[di]];
+  itinerary.forEach((d, i) => d.day = i + 1);
+  save(); render();
+  toast('Day reordered');
+}
+
+// ── Drag & Drop ──
+let dragDi, dragPi;
+function onDragStart(e) {
+  dragDi = +e.currentTarget.dataset.di;
+  dragPi = +e.currentTarget.dataset.pi;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function onDragEnd(e) {
+  document.querySelectorAll('.dragging,.drag-over').forEach(el => el.classList.remove('dragging','drag-over'));
+}
+function onDrop(e) {
+  e.preventDefault();
+  const toDi = +e.currentTarget.dataset.di;
+  const toPi = +e.currentTarget.dataset.pi;
+  e.currentTarget.classList.remove('drag-over');
+  if (dragDi === toDi) {
+    const arr = itinerary[dragDi].places;
+    const [item] = arr.splice(dragPi, 1);
+    arr.splice(toPi, 0, item);
+  } else {
+    const item = itinerary[dragDi].places.splice(dragPi, 1)[0];
+    itinerary[toDi].places.splice(toPi, 0, item);
+  }
+  save(); render();
+  toast('Reordered!');
+}
+
+// ── Export / Import ──
+function exportJSON() {
+  document.getElementById('exportData').value = JSON.stringify(itinerary, null, 2);
+  document.getElementById('exportModal').classList.add('show');
+}
+function copyExport() {
+  navigator.clipboard.writeText(document.getElementById('exportData').value);
+  toast('Copied to clipboard!');
+}
+function importJSON() {
+  document.getElementById('importData').value = '';
+  document.getElementById('importModal').classList.add('show');
+}
+function doImport() {
+  try {
+    const data = JSON.parse(document.getElementById('importData').value);
+    if (!Array.isArray(data)) throw new Error('Must be array');
+    itinerary = data;
+    itinerary.forEach((d, i) => d.day = i + 1);
+    save(); render(); closeModal();
+    toast('Data imported successfully!');
+  } catch (e) { toast('Invalid JSON! Check your data.'); }
+}
+function closeModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+}
+function resetData() {
+  if (!confirm('Reset to original itinerary? All changes will be lost.')) return;
+  itinerary = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  save(); render();
+  toast('Reset to original!');
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(); });
+});
+
+load();
+render();
+</script>
+</body>
+</html>
