@@ -390,12 +390,32 @@ const DEFAULT_DATA = [
 
 let itinerary = JSON.parse(JSON.stringify(DEFAULT_DATA));
 const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
+const API_URL = 'https://jsonblob.com/api/jsonBlob/019d5f3b-a91d-7db7-ba96-ccf32cfcb2a1';
 
-function save() { localStorage.setItem('admin_itinerary', JSON.stringify(itinerary)); }
-function load() {
-  const d = localStorage.getItem('admin_itinerary');
-  if (d) itinerary = JSON.parse(d);
+let saveTimeout;
+function save() {
+  // Debounce saves - push to cloud 500ms after last change
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(itinerary)
+      });
+      if (res.ok) {
+        toast('Saved & pushed live!');
+      } else {
+        toast('Save failed - try again');
+      }
+    } catch (e) {
+      toast('Network error - changes saved locally');
+      localStorage.setItem('admin_itinerary', JSON.stringify(itinerary));
+    }
+  }, 500);
 }
+
+function load() { }
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -601,8 +621,22 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(); });
 });
 
-load();
-render();
+// Load from cloud on start
+async function loadFromCloud() {
+  try {
+    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        itinerary = data;
+      }
+    }
+  } catch (e) {
+    console.log('Using default data');
+  }
+  render();
+}
+loadFromCloud();
 </script>
 </body>
 </html>

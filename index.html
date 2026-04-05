@@ -227,9 +227,7 @@ let itinerary = [
 ];
 
 const COLORS = ['#6c63ff','#8b7aff','#00d4aa','#ffa94d','#ff6b6b','#e85ad5','#4dc9f6','#f7c948'];
-
-function save() { }
-function load() { }
+const API_URL = 'https://jsonblob.com/api/jsonBlob/019d5f3b-a91d-7db7-ba96-ccf32cfcb2a1';
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -288,9 +286,23 @@ function render() {
   });
 }
 
+// Load live data from cloud
+async function loadFromCloud() {
+  try {
+    const res = await fetch(API_URL, { headers: { 'Accept': 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        itinerary = data;
+      }
+    }
+  } catch (e) {
+    console.log('Using default data');
+  }
+  render();
+}
 
-load();
-render();
+loadFromCloud();
 </script>
 </body>
 </html>
